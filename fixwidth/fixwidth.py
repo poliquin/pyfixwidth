@@ -35,7 +35,8 @@ def read_file_format(fpath):
     return title, spec
 
 
-def parse_lines(lines, spec, strip=True, type_errors='raise', src_file=None):
+def parse_lines(lines, spec, strip=True, type_errors='raise', encoding='utf-8',
+                src_file=None):
     """Parse iterable of lines of fixed width data."""
 
     fieldstruct = struct.Struct(
@@ -47,9 +48,9 @@ def parse_lines(lines, spec, strip=True, type_errors='raise', src_file=None):
 
     for idx, line in enumerate(lines, start=1):
 
-        data = fieldstruct.unpack_from(line.encode())
+        data = fieldstruct.unpack_from(line)
         data = tuple(
-            s.decode().strip() if strip else s.decode() for s in data
+            s.decode(encoding).strip() if strip else s.decode(encoding) for s in data
         )
 
         values = []
@@ -80,8 +81,8 @@ def parse_lines(lines, spec, strip=True, type_errors='raise', src_file=None):
         yield OrderedDict(zip(colnames, values))
 
 
-def parse_file(fpath, spec, strip=True, type_errors='raise'):
+def parse_file(fpath, spec, strip=True, type_errors='raise', encoding='ascii'):
     """Read data from fixed width file."""
 
-    with open(fpath, 'r') as fh:
-        yield from parse_lines(fh, spec, strip, type_errors, src_file=fpath)
+    with open(fpath, 'rb') as fh:
+        yield from parse_lines(fh, spec, strip, type_errors, encoding, src_file=fpath)
