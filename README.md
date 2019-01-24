@@ -73,13 +73,13 @@ from fixwidth import read_file_format, parse_file
 
 
 # read a layout file describing how records are formatted
-title, layout = read_file_format('path/to/data.layout')
+title, layout = read_file_format('example/data.layout')
 
 # title is 'employees' for the above layout example
 # layout is a list of namedtuple objects with (width, datatype, name)
 
 # parse a data file
-rows = parse_file('path/to/data1.txt', spec=layout, type_errors='ignore')
+rows = parse_file('example/data1.txt', spec=layout, type_errors='ignore')
 
 # type_errors determines what should happen when field content does not
 # match the given datatype (e.g. an int column containing 'abc'). Use
