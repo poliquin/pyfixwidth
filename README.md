@@ -9,7 +9,7 @@ contents to appropriate Python types.
 
 The module can be run from the command line as follows:
 
-    python -m fixwidth data.layout data1.txt data2.txt data3.txt
+    python -m fixwidth data.layout data1.txt data2.txt
 
 where `data1.txt` and `data2.txt` contain records and `data.layout` contains
 a description of the records and how to parse each field. By default, the
@@ -91,4 +91,5 @@ for r in rows:
 # rows is a generator that yields OrderedDict objects.
 ```
 
-<!-- vim: tabstop=10 -->
+<!-- vim: tabstop=10
+-->
