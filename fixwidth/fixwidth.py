@@ -35,8 +35,8 @@ def read_file_format(fpath):
     return title, spec
 
 
-def parse_file(fpath, spec, strip=True, type_errors='raise'):
-    """Read data from fixed width file."""
+def parse_lines(lines, spec, strip=True, type_errors='raise', src_file=None):
+    """Parse iterable of lines of fixed width data."""
 
     fieldstruct = struct.Struct(
         ' '.join('{}{}'.format(abs(w), 'x' if w < 0 else 's') for w, *_ in spec)
@@ -45,31 +45,43 @@ def parse_file(fpath, spec, strip=True, type_errors='raise'):
     colnames = tuple(n for w, t, n in spec if w > 0)
     coltypes = tuple(CONVERTERS[t] for w, t, n in spec if w > 0)
 
+    for idx, line in enumerate(lines, start=1):
+
+        data = fieldstruct.unpack_from(line.encode())
+        data = tuple(
+            s.decode().strip() if strip else s.decode() for s in data
+        )
+
+        values = []
+        for func, v in zip(coltypes, data):
+            if len(v.strip()) == 0:
+                values.append(None)
+            else:
+                try:
+                    values.append(func(v))
+                except ValueError as err:
+                    if type_errors == 'ignore':
+                        values.append(None)
+                        logging.warning(
+                            '%s on line %s%s',
+                            err,
+                            idx,
+                            ' of %s' % src_file if src_file is not None else ''
+                        )
+                    else:
+                        logging.critical(
+                            '%s on line %s%s',
+                            err,
+                            idx,
+                            ' of %s' % src_file if src_file is not None else ''
+                        )
+                        raise
+
+        yield OrderedDict(zip(colnames, values))
+
+
+def parse_file(fpath, spec, strip=True, type_errors='raise'):
+    """Read data from fixed width file."""
+
     with open(fpath, 'r') as fh:
-        for idx, line in enumerate(fh, start=1):
-
-            data = fieldstruct.unpack_from(line.encode())
-            data = tuple(
-                s.decode().strip() if strip else s.decode() for s in data
-            )
-
-            values = []
-            for func, v in zip(coltypes, data):
-                if len(v.strip()) == 0:
-                    values.append(None)
-                else:
-                    try:
-                        values.append(func(v))
-                    except ValueError as err:
-                        if type_errors == 'ignore':
-                            values.append(None)
-                            logging.warning(
-                                '%s on line %s of %s', err, idx, fpath
-                            )
-                        else:
-                            logging.critical(
-                                '%s on line %s of %s', err, idx, fpath
-                            )
-                            raise
-
-            yield OrderedDict(zip(colnames, values))
+        yield from parse_lines(fh, spec, strip, type_errors, src_file=fpath)
