@@ -1,0 +1,8 @@
+employees
+# records on workers and their salaries
+  6	int	employee_id
+ 15	str	job_title
+  8	float	salary
+# negative values denote fields to skip when reading data
+ -3	str	blank
+ 10	date	hire_date
