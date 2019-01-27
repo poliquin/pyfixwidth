@@ -3,9 +3,22 @@ import re
 from datetime import date
 from datetime import datetime
 
-RE_ISO8601 = re.compile(r'([0-9]{4})-?([01][0-9])-?([0-3][0-9])')
+RE_ISO8601_DATE = re.compile(r'([0-9]{4})-?([01][0-9])-?([0-3][0-9])')
 RE_DATE9 = re.compile(r'([0-3][0-9])([jfmasond][aepuco][nbrylgptvc])([0-9]{4})')
 RE_MMDDYY = re.compile(r'([0-1][0-9])([0-3][0-9])([0-9]{2})')
+
+RE_ISO8601_DATETIME = re.compile(
+    r"""
+    ^([0-9]{4})-?          # year
+     ([01][0-9])-?         # month
+     ([0-3][0-9])(?:-|\s)  # day
+     ([0-2][0-9])[.:]      # hour (24-hour clock)
+     ([0-6][0-9])[.:]      # minute
+     ([0-6][0-9])[.:]?     # second
+     ([0-9]{1,6})?         # optional microseconds
+    $""",
+    re.X
+)
 
 MONTHS = {
     'jan': 1,
@@ -60,10 +73,10 @@ def convert_date(datestring, format=None):
 
     # guess the format
 
-    m = RE_ISO8601.match(datestring)
+    m = RE_ISO8601_DATE.match(datestring)
     if m is not None:
         # assume ISO 8601
-        return date(*(int(i) for i in m.groups()))
+        return date(*[int(i) for i in m.groups()])
 
     m = RE_DATE9.match(datestring)
     if m is not None:
@@ -99,20 +112,12 @@ def convert_datetime(datestring, format=None):
 
     # try ISO 8601
 
-    m = re.match(r"""
-        ^([0-9]{4})-?          # year
-         ([01][0-9])-?         # month
-         ([0-3][0-9])(?:-|\s)  # day
-         ([0-2][0-9])[.:]      # hour (24-hour clock)
-         ([0-6][0-9])[.:]      # minute
-         ([0-6][0-9])[.:]?     # second
-         ([0-9]{1,6})?         # optional microseconds
-        $""", datestring, re.X)
+    m = RE_ISO8601_DATETIME.match(datestring)
 
     if m is not None:
 
         return datetime(
-            *(int(i) if i is not None else 0 for i in m.groups())
+            *[int(i) for i in m.groups(0)]
         )
 
     raise ValueError('Could not convert {} to datetime'.format(datestring))
