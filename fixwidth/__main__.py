@@ -1,5 +1,6 @@
 
 import csv
+import logging
 import sys
 
 from .fixwidth import read_file_format, parse_file
@@ -66,9 +67,14 @@ if __name__ == '__main__':
     argp.add_argument('-d', '--delimiter', default='\t', help='Field separator')
     argp.add_argument('-o', '--output', type=argparse.FileType('w'),
                       default=sys.stdout, help='Output file (default stdout)')
+    argp.add_argument('--nolog', action='store_true', help='Do not log warnings')
 
     opts = argp.parse_args()
     atexit.register(opts.output.close)  # close output file when script ends
+
+    logging.basicConfig(
+        level=logging.CRITICAL if opts.nolog else logging.WARNING
+    )
 
     spec = main(opts.schema, opts.files, opts.output, opts.delimiter,
                 opts.ignore_type_errors)
