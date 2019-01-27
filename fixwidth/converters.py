@@ -22,24 +22,27 @@ MONTHS = {
     'dec': 12
 }
 
+YES_VALUES = frozenset(('y', 'yes', b'y', b'yes'))
+NO_VALUES = frozenset(('n', 'no', b'n', b'no'))
+
 
 def convert_yesno(val):
     """Convert a yes/no value into a boolean."""
 
-    if not isinstance(val, (str, bytes)):
-        raise TypeError('Value must be string or bytes.')
-
     val = val.lower().strip()
 
-    if val in ('y', 'yes', b'y', b'yes'):
+    if val in YES_VALUES:
         return True
 
-    elif val in ('n', 'no', b'n', b'no'):
+    elif val in NO_VALUES:
         return False
 
-    else:
-        if len(val) == 0:
+    elif len(val) == 0:
             return None  # missing data
+
+    else:
+        if not isinstance(val, (str, bytes)):
+            raise TypeError('Value must be string or bytes.')
         else:
             raise ValueError('Invalid value for yes/no field: {}'.format(val))
 
