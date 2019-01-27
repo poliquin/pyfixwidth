@@ -7,6 +7,7 @@ from collections import OrderedDict, namedtuple
 from .converters import CONVERTERS
 
 FieldInfo = namedtuple('FieldInfo', ['width', 'datatype', 'name'])
+logger = logging.getLogger('fixwidth')
 
 
 def read_file_format(fpath):
@@ -63,14 +64,14 @@ def parse_lines(lines, spec, strip=True, type_errors='raise', encoding='utf-8',
                 except ValueError as err:
                     if type_errors == 'ignore':
                         values.append(None)
-                        logging.warning(
+                        logger.warning(
                             '%s on line %s%s',
                             err,
                             idx,
                             ' of %s' % src_file if src_file is not None else ''
                         )
                     else:
-                        logging.critical(
+                        logger.critical(
                             '%s on line %s%s',
                             err,
                             idx,
