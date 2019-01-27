@@ -133,7 +133,7 @@ def convert_julian(datestring):
 
 
 CONVERTERS = {
-    'str': str,
+    'str': lambda x: x,  # argument will already be a string
     'int': int,
     'bool': bool,
     'float': float,
