@@ -1,6 +1,26 @@
 
 import re
+from datetime import date
 from datetime import datetime
+
+RE_ISO8601 = re.compile(r'([0-9]{4})-?([01][0-9])-?([0-3][0-9])')
+RE_DATE9 = re.compile(r'([0-3][0-9])([jfmasond][aepuco][nbrylgptvc])([0-9]{4})')
+RE_MMDDYY = re.compile(r'([0-1][0-9])([0-3][0-9])([0-9]{2})')
+
+MONTHS = {
+    'jan': 1,
+    'feb': 2,
+    'mar': 3,
+    'apr': 4,
+    'may': 5,
+    'jun': 6,
+    'jul': 7,
+    'aug': 8,
+    'sep': 9,
+    'oct': 10,
+    'nov': 11,
+    'dec': 12
+}
 
 
 def convert_yesno(val):
@@ -37,24 +57,28 @@ def convert_date(datestring, format=None):
 
     # guess the format
 
-    if re.match(r'[0-9]{4}-[01][0-9]-[0-3][0-9]', datestring):
+    m = RE_ISO8601.match(datestring)
+    if m is not None:
         # assume ISO 8601
-        return datetime.strptime(datestring, '%Y-%m-%d').date()
+        return date(*(int(i) for i in m.groups()))
 
-    if re.match(r'[0-9]{4}[01][0-9][0-3][0-9]', datestring):
-        # assume missing '-' in ISO 8601 format
-        return datetime.strptime(datestring, '%Y%m%d').date()
-
-    if re.match(r'[0-3][0-9][jfmasond][aepuco][nbrylgptvc][0-9]{4}', datestring):
+    m = RE_DATE9.match(datestring)
+    if m is not None:
         # assume DATE9 format
-        return datetime.strptime(datestring, '%d%b%Y').date()
+        return date(
+            1900 + int(m.group(3)),
+            MONTHS[m.group(2)],
+            int(m.group(1))
+        )
 
-    if re.match(r'[0-1][0-9][0-3][0-9][0-9]{2}', datestring):
+    m = RE_MMDDYY.match(datestring)
+    if m is not None:
         # assume MMDDYY format where year is from 20th century
-        dt = datetime.strptime(datestring, '%m%d%y')
-        if dt.year >= 2000:
-            dt.replace(year=dt.year - 100)
-        return dt
+        return date(
+            1900 + int(m.group(3)),
+            int(m.group(1)),
+            int(m.group(2))
+        )
 
     raise ValueError('Could not convert {} to date'.format(datestring))
 
