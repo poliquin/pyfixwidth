@@ -1,6 +1,8 @@
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 from fixwidth.converters import convert_date
+from fixwidth.converters import convert_datetime
+from fixwidth.converters import convert_time
 
 
 def test_convert_date():
@@ -25,3 +27,20 @@ def test_convert_date():
                            'aug', 'sep', 'oct', 'nov', 'dec'), start=1):
         assert convert_date('10{}2018'.format(m)) == date(2018, i, 10)
         assert convert_date('03{}1950'.format(m)) == date(1950, i, 3)
+
+
+def test_convert_datetime():
+    """Test conversion of date/times in typical formats."""
+
+    # ISO 8601
+    assert convert_datetime('1994-10-01 14:30:00') == datetime(1994, 10, 1, 14, 30)
+
+
+def test_convert_time():
+    """Test conversion of times in HH:MM:SS formats."""
+
+    assert convert_time('14:30:00') == time(14, 30)
+    assert convert_time('14.30.00') == time(14, 30)
+    assert convert_time('143000') == time(14, 30)
+    assert convert_time('09:00') == time(9)
+    assert convert_time('0900') == time(9)
