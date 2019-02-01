@@ -2,6 +2,7 @@
 import re
 from datetime import date
 from datetime import datetime
+from datetime import time
 
 RE_ISO8601_DATE = re.compile(r'([0-9]{4})-?([01][0-9])-?([0-3][0-9])')
 RE_ISO8601_SLOPPY_DATE = re.compile(r'([0-9]{4})-([01]?[0-9])-([0-3]?[0-9])')
@@ -20,6 +21,8 @@ RE_ISO8601_DATETIME = re.compile(
     $""",
     re.X
 )
+
+RE_HMS_TIME = re.compile(r'([0-2][0-9])[.:]?([0-5][0-9])[.:]?([0-5][0-9])?')
 
 MONTHS = {
     'jan': 1,
@@ -138,6 +141,24 @@ def convert_julian(datestring):
     )
 
 
+def convert_time(timestring, format=None):
+    """Parse string into a naive time HH:MM:SS."""
+
+    timestring = timestring.strip()
+
+    if len(timestring) == 0:
+        return None  # missing data
+
+    if format is not None:
+        return datetime.strptime(timestring, format).time()
+
+    m = RE_HMS_TIME.match(timestring)
+    if m is not None:
+        return time(*[int(i) for i in m.groups(0)])
+
+    raise ValueError('Could not convert {} to time'.format(timestring))
+
+
 CONVERTERS = {
     'str': lambda x: x,  # argument will already be a string
     'int': int,
@@ -146,5 +167,6 @@ CONVERTERS = {
     'yesno': convert_yesno,
     'date': convert_date,
     'datetime': convert_datetime,
-    'julian': convert_julian
+    'julian': convert_julian,
+    'time': convert_time
 }
