@@ -83,7 +83,7 @@ def convert_date(datestring, format=None):
     if m is not None:
         # assume DATE9 format
         return date(
-            1900 + int(m.group(3)),
+            int(m.group(3)),
             MONTHS[m.group(2)],
             int(m.group(1))
         )
