@@ -4,6 +4,7 @@ from datetime import date
 from datetime import datetime
 
 RE_ISO8601_DATE = re.compile(r'([0-9]{4})-?([01][0-9])-?([0-3][0-9])')
+RE_ISO8601_SLOPPY_DATE = re.compile(r'([0-9]{4})-([01]?[0-9])-([0-3]?[0-9])')
 RE_DATE9 = re.compile(r'([0-3][0-9])([jfmasond][aepuco][nbrylgptvc])([0-9]{4})')
 RE_MMDDYY = re.compile(r'([0-1][0-9])([0-3][0-9])([0-9]{2})')
 
@@ -95,6 +96,11 @@ def convert_date(datestring, format=None):
             int(m.group(1)),
             int(m.group(2))
         )
+
+    m = RE_ISO8601_SLOPPY_DATE.match(datestring)
+    if m is not None:
+        # ISO 8601 without two digit months and days
+        return date(*[int(i) for i in m.groups()])
 
     raise ValueError('Could not convert {} to date'.format(datestring))
 
