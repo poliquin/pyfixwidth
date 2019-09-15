@@ -1,5 +1,6 @@
 
 import csv
+import os
 import logging
 import struct
 from collections import OrderedDict, namedtuple
@@ -87,3 +88,30 @@ def parse_file(fpath, spec, strip=True, type_errors='raise', encoding='ascii'):
 
     with open(fpath, 'rb') as fh:
         yield from parse_lines(fh, spec, strip, type_errors, encoding, src_file=fpath)
+
+
+class DictReader:
+    def __init__(self, f, fieldinfo):
+
+        try:
+            if os.path.isfile(fieldinfo):
+                _, self._spec = read_file_format(fieldinfo)
+            else:
+                raise ValueError('Invalid file {}'.format(fieldinfo))
+        except TypeError:
+            self._spec = fieldinfo
+
+        if not ('r' in f.mode and 'b' in f.mode):
+            raise ValueError('File must be opened for reading in binary mode')
+
+        self._f = f
+        self.line_num = 0
+        self.fieldnames = tuple(n for w, t, n in self._spec)
+        self._records = parse_lines(self._f, self._spec)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        self.line_num += 1
+        return next(self._records)
