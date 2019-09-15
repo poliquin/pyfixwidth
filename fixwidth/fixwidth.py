@@ -101,7 +101,7 @@ class DictReader:
         except TypeError:
             self._spec = fieldinfo
 
-        if not ('r' in f.mode and 'b' in f.mode):
+        if hasattr(f, 'mode') and not ('r' in f.mode and 'b' in f.mode):
             raise ValueError('File must be opened for reading in binary mode')
 
         self._f = f
