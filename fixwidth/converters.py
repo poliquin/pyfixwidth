@@ -170,3 +170,15 @@ CONVERTERS = {
     'julian': convert_julian,
     'time': convert_time
 }
+
+
+def register_type(coltype):
+    """Create a type for parsing fixed width data."""
+
+    def register(func):
+        """Register a function for parsing fixed width data."""
+
+        CONVERTERS[coltype] = func
+        return func
+
+    return register

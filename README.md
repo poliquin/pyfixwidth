@@ -59,9 +59,21 @@ methods or adding some way to specify a date format in the layout file.
 
 #### Adding more data types
 
-These are defined in `converters.py` and it is trivial to add more types.
-To add a type, write a function that takes string input and returns a
-single object, then add the function to the `CONVERTERS` dictionary.
+Types are defined in `converters.py` and it is trivial to add more types.
+To add a type, apply the `fixwidth.converters.register_type` decorator to
+a function that takes string input and returns a single object:
+
+```python
+
+from fixwidth.converters import register_type
+
+@register_type('foo')
+def convert_foo(value):
+    """Convert any input to the string 'foo!'"
+    return 'foo!'
+```
+
+The type `foo` can then be used in layouts like the above column types.
 
 
 ## Usage as a module
