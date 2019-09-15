@@ -64,13 +64,40 @@ To add a type, write a function that takes string input and returns a
 single object, then add the function to the `CONVERTERS` dictionary.
 
 
-##  Usage as a module
+## Usage as a module
 
-There are two key functions --- `read_file_format` and `parse_file`:
+There is a `fixwidth.DictReader` class that resembles `csv.DictReader` in
+usage, but requires files be opened in binary mode:
+
+```python
+import fixwidth
+
+with open('example/data1.txt', 'rb') as fh:
+    rdr = fixwidth.DictReader(fh, fieldinfo='example/data.layout')
+    next(rdr)
+```
+
+The `fieldinfo` parameter can be a path to a layout file (described above)
+or a sequence of tuples describing the columns:
+
+```python
+
+layout = [
+    (6, 'int', 'employee_id'),
+    (15, 'str', 'job_title'),
+    (8, 'float', 'salary'),
+    (-3, 'str', 'blank'),
+    (10, 'date', 'hire_date')
+]
+
+with open('example/data1.txt', 'rb') as fh:
+    rdr = fixwidth.DictReader(fh, layout)
+```
+
+Alternatively, you can use the functions `read_file_format` and `parse_file`:
 
 ```python
 from fixwidth import read_file_format, parse_file
-
 
 # read a layout file describing how records are formatted
 title, layout = read_file_format('example/data.layout')
