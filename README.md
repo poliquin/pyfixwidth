@@ -69,7 +69,7 @@ from fixwidth.converters import register_type
 
 @register_type('foo')
 def convert_foo(value):
-    """Convert any input to the string 'foo!'"
+    """Convert any input to the string 'foo!'"""
     return 'foo!'
 ```
 
