@@ -38,7 +38,7 @@ def read_file_format(fpath):
 
 
 def parse_lines(lines, spec, strip=True, type_errors='raise', encoding='utf-8',
-                src_file=None):
+                src_file=None, skip_blank_lines=False):
     """Parse iterable of lines of fixed width data."""
 
     fieldstruct = struct.Struct(
@@ -49,6 +49,9 @@ def parse_lines(lines, spec, strip=True, type_errors='raise', encoding='utf-8',
     coltypes = tuple(CONVERTERS[t] for w, t, n in spec if w > 0)
 
     for idx, line in enumerate(lines, start=1):
+
+        if skip_blank_lines and len(line.rstrip(b'\r\n')) == 0:
+            continue
 
         data = fieldstruct.unpack_from(line)
         data = tuple(
@@ -83,15 +86,18 @@ def parse_lines(lines, spec, strip=True, type_errors='raise', encoding='utf-8',
         yield OrderedDict(zip(colnames, values))
 
 
-def parse_file(fpath, spec, strip=True, type_errors='raise', encoding='ascii'):
+def parse_file(fpath, spec, strip=True, type_errors='raise', encoding='ascii',
+               skip_blank_lines=False):
     """Read data from fixed width file."""
 
     with open(fpath, 'rb') as fh:
-        yield from parse_lines(fh, spec, strip, type_errors, encoding, src_file=fpath)
+        yield from parse_lines(
+            fh, spec, strip, type_errors, encoding, fpath, skip_blank_lines
+        )
 
 
 class DictReader:
-    def __init__(self, f, fieldinfo):
+    def __init__(self, f, fieldinfo, skip_blank_lines=False):
 
         try:
             if os.path.isfile(fieldinfo):
@@ -107,7 +113,9 @@ class DictReader:
         self._f = f
         self.line_num = 0
         self.fieldnames = tuple(n for w, t, n in self._spec)
-        self._records = parse_lines(self._f, self._spec)
+        self._records = parse_lines(
+            self._f, self._spec, skip_blank_lines=skip_blank_lines
+        )
 
     def __iter__(self):
         return self

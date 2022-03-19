@@ -6,7 +6,8 @@ import sys
 from .fixwidth import read_file_format, parse_file
 
 
-def main(schema, files, output=None, delimiter='\t', ignore_type_errors=False):
+def main(schema, files, output=None, delimiter='\t', ignore_type_errors=False,
+         skip_blank_lines=False):
     """Process fixed width files and write to standard output.
 
     Args:
@@ -15,6 +16,7 @@ def main(schema, files, output=None, delimiter='\t', ignore_type_errors=False):
         output (file): file for writing processed data (default is sys.stdout).
         delimiter (str): field delimiter for output.
         ignore_type_errors (bool): replace invalid field data with None.
+        skip_blank_lines (bool): whether to ignore blank lines in input data.
     """
 
     if output is None:
@@ -38,7 +40,8 @@ def main(schema, files, output=None, delimiter='\t', ignore_type_errors=False):
         rows = parse_file(
             fpath,
             spec=spec,
-            type_errors='ignore' if ignore_type_errors else 'raise'
+            type_errors='ignore' if ignore_type_errors else 'raise',
+            skip_blank_lines=skip_blank_lines
         )
 
         try:
@@ -64,6 +67,8 @@ if __name__ == '__main__':
     argp.add_argument('files', nargs='+', help='Paths to data files')
     argp.add_argument('-i', '--ignore-type-errors', action='store_true',
                       help='Set fields that raise errors to None and continue')
+    argp.add_argument('-s', '--skip-blank-lines', action='store_true',
+                      help='Ignore blank lines in input data')
     argp.add_argument('-d', '--delimiter', default='\t', help='Field separator')
     argp.add_argument('-o', '--output', type=argparse.FileType('w'),
                       default=sys.stdout, help='Output file (default stdout)')
@@ -77,4 +82,4 @@ if __name__ == '__main__':
     )
 
     spec = main(opts.schema, opts.files, opts.output, opts.delimiter,
-                opts.ignore_type_errors)
+                opts.ignore_type_errors, opts.skip_blank_lines)

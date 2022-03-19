@@ -85,7 +85,11 @@ usage, but requires files be opened in binary mode:
 import fixwidth
 
 with open('example/data1.txt', 'rb') as fh:
-    rdr = fixwidth.DictReader(fh, fieldinfo='example/data.layout')
+    rdr = fixwidth.DictReader(
+        fh,
+        fieldinfo='example/data.layout',
+        skip_blank_lines=True
+    )
     next(rdr)
 ```
 

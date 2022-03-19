@@ -30,6 +30,36 @@ def test_file_parsing():
         ('row_id', 3), ('name', 'Amy')
     ])
 
+    # test skipping of blank lines in input
+    data = io.BytesIO(b'\n01Bob  \n\n02Susan\n\n\n03Amy  \n\n')
+
+    records = parse_lines(data, layout, skip_blank_lines=True)
+
+    assert next(records) == OrderedDict([
+        ('row_id', 1), ('name', 'Bob')
+    ])
+    assert next(records) == OrderedDict([
+        ('row_id', 2), ('name', 'Susan')
+    ])
+    assert next(records) == OrderedDict([
+        ('row_id', 3), ('name', 'Amy')
+    ])
+
+    # lines of all whitespace should not be skipped
+    data = io.BytesIO(b'\n01Bob  \n\n       \n\n03Amy  \n\n')
+
+    records = parse_lines(data, layout, skip_blank_lines=True)
+
+    assert next(records) == OrderedDict([
+        ('row_id', 1), ('name', 'Bob')
+    ])
+    assert next(records) == OrderedDict([
+        ('row_id', None), ('name', None)
+    ])
+    assert next(records) == OrderedDict([
+        ('row_id', 3), ('name', 'Amy')
+    ])
+
 
 def test_read_file_format():
     """Check parsing of files describing fixed width layouts."""
