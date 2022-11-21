@@ -1,5 +1,8 @@
 
 build/
+dist/
+pyfixwidth.egg-info/
+
 __pycache__/
 .pytest_cache/
 
