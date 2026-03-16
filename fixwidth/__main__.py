@@ -55,7 +55,7 @@ def main(schema, files, output=None, delimiter='\t', ignore_type_errors=False,
     return spec
 
 
-if __name__ == '__main__':
+def cli(argv=None):
     import atexit
     import argparse
 
@@ -74,12 +74,17 @@ if __name__ == '__main__':
                       default=sys.stdout, help='Output file (default stdout)')
     argp.add_argument('--nolog', action='store_true', help='Do not log warnings')
 
-    opts = argp.parse_args()
+    opts = argp.parse_args(argv)
     atexit.register(opts.output.close)  # close output file when script ends
 
     logging.basicConfig(
         level=logging.CRITICAL if opts.nolog else logging.WARNING
     )
 
-    spec = main(opts.schema, opts.files, opts.output, opts.delimiter,
-                opts.ignore_type_errors, opts.skip_blank_lines)
+    main(opts.schema, opts.files, opts.output, opts.delimiter,
+         opts.ignore_type_errors, opts.skip_blank_lines)
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(cli())

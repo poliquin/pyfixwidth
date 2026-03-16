@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyfixwidth"
+version = "0.2.2"
+description = "Read fixed width data files"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+  { name = "Chris Poliquin", email = "chrispoliquin@gmail.com" }
+]
+requires-python = ">=3.9"
+keywords = ["data", "fixed width", "parse", "parser"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Operating System :: OS Independent",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Topic :: Utilities"
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/poliquin/pyfixwidth"
+Repository = "https://github.com/poliquin/pyfixwidth"
+
+[project.optional-dependencies]
+dev = ["build", "pytest", "twine"]
+
+[project.scripts]
+pyfixwidth = "fixwidth.__main__:cli"
+
+[tool.setuptools]
+packages = ["fixwidth"]
