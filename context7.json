@@ -23,5 +23,7 @@
     "Blank field content becomes None before type conversion.",
     "Use type_errors='ignore' to continue parsing and replace invalid fields with None.",
     "parse_file() defaults to ASCII decoding while parse_lines() defaults to UTF-8 decoding."
-  ]
+  ],
+  "url": "https://context7.com/poliquin/pyfixwidth",
+  "public_key": "pk_oZFGp9tOHgE4l64EutSEU"
 }
