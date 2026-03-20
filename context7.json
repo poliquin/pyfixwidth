@@ -1,0 +1,27 @@
+{
+  "projectTitle": "pyfixwidth",
+  "description": "Lightweight Python package for reading fixed-width text files from the CLI or Python code.",
+  "branch": "master",
+  "folders": [
+    "docs"
+  ],
+  "excludeFolders": [
+    "tests",
+    "dist",
+    ".venv",
+    "__pycache__",
+    "example"
+  ],
+  "includeFiles": [
+    "README.md",
+    "AGENTS.md"
+  ],
+  "rules": [
+    "Open files in binary mode when using fixwidth.DictReader.",
+    "A layout file begins with a title, then tab-delimited width, datatype, and field-name entries.",
+    "Negative widths skip bytes in the source record and do not appear in parsed rows.",
+    "Blank field content becomes None before type conversion.",
+    "Use type_errors='ignore' to continue parsing and replace invalid fields with None.",
+    "parse_file() defaults to ASCII decoding while parse_lines() defaults to UTF-8 decoding."
+  ]
+}

@@ -1,3 +1,4 @@
+"""Built-in converter functions for fixed-width field values."""
 
 import re
 from datetime import date
@@ -44,7 +45,12 @@ NO_VALUES = frozenset(('n', 'no', b'n', b'no'))
 
 
 def convert_yesno(val):
-    """Convert a yes/no value into a boolean."""
+    """Convert a yes/no token into ``True`` or ``False``.
+
+    Accepted truthy values are ``y`` and ``yes``. Accepted falsy values are
+    ``n`` and ``no``. Matching is case-insensitive and surrounding whitespace
+    is ignored. Empty values return ``None``.
+    """
 
     val = val.lower().strip()
 
@@ -65,7 +71,24 @@ def convert_yesno(val):
 
 
 def convert_date(datestring, format=None):
-    """Convert a string into a date."""
+    """Convert a string into :class:`datetime.date`.
+
+    Args:
+        datestring (str): Input text to parse.
+        format (str | None): Optional :func:`datetime.datetime.strptime`
+            format string. When omitted, the converter tries a small set of
+            built-in formats.
+
+    Returns:
+        datetime.date | None: Parsed date object or ``None`` for blank input.
+
+    Supported inferred formats:
+        * ``YYYY-MM-DD``
+        * ``YYYYMMDD``
+        * ``DDmonYYYY`` such as ``23aug1995``
+        * ``MMDDYY`` interpreted as a twentieth-century year
+        * ``YYYY-M-D`` without zero-padded month or day
+    """
 
     datestring = datestring.strip()
 
@@ -109,7 +132,17 @@ def convert_date(datestring, format=None):
 
 
 def convert_datetime(datestring, format=None):
-    """Convert a string into a datetime."""
+    """Convert a string into :class:`datetime.datetime`.
+
+    Args:
+        datestring (str): Input text to parse.
+        format (str | None): Optional :func:`datetime.datetime.strptime`
+            format string. When omitted, an ISO-like pattern is inferred.
+
+    Returns:
+        datetime.datetime | None: Parsed datetime object or ``None`` for blank
+        input.
+    """
 
     datestring = datestring.strip()
 
@@ -133,7 +166,10 @@ def convert_datetime(datestring, format=None):
 
 
 def convert_julian(datestring):
-    """Convert string representing Julian calendar date to a date."""
+    """Convert a ``YYYYDDD`` Julian date string into :class:`datetime.date`.
+
+    Any ``-``, ``:``, ``.`` or space characters are removed before parsing.
+    """
 
     return convert_date(
         re.sub(r'[\- :.]', '', datestring.strip()),  # remove any delimiter
@@ -142,7 +178,17 @@ def convert_julian(datestring):
 
 
 def convert_time(timestring, format=None):
-    """Parse string into a naive time HH:MM:SS."""
+    """Convert a string into :class:`datetime.time`.
+
+    Args:
+        timestring (str): Input text to parse.
+        format (str | None): Optional :func:`datetime.datetime.strptime`
+            format string. When omitted, the converter accepts common compact
+            and delimited ``HHMMSS`` forms.
+
+    Returns:
+        datetime.time | None: Parsed time object or ``None`` for blank input.
+    """
 
     timestring = timestring.strip()
 
@@ -173,10 +219,24 @@ CONVERTERS = {
 
 
 def register_type(coltype):
-    """Create a type for parsing fixed width data."""
+    """Register a custom converter function under a layout type name.
+
+    Args:
+        coltype (str): Name used in layout files, such as ``'date'`` or
+            ``'custom_code'``.
+
+    Returns:
+        callable: A decorator that stores the decorated function in the global
+        converter registry and returns the original function.
+
+    Example:
+        >>> @register_type('uppercase')
+        ... def convert_uppercase(value):
+        ...     return value.strip().upper()
+    """
 
     def register(func):
-        """Register a function for parsing fixed width data."""
+        """Store ``func`` in the converter registry."""
 
         CONVERTERS[coltype] = func
         return func

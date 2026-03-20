@@ -1,3 +1,4 @@
+"""Core helpers for reading fixed-width text data."""
 
 import csv
 import os
@@ -12,7 +13,21 @@ logger = logging.getLogger('fixwidth')
 
 
 def read_file_format(fpath):
-    """Read file format specification with instructions for parsing data."""
+    """Load a tab-delimited layout description from disk.
+
+    Args:
+        fpath (str): Path to a layout file. The first line is treated as the
+            layout title. Each later, non-comment line must contain a field
+            width, converter name, and field name separated by tabs.
+
+    Returns:
+        tuple[str, list[FieldInfo]]: The layout title and a list of
+        :class:`FieldInfo` objects.
+
+    Notes:
+        Comment lines must begin with ``#`` and occupy their own line.
+        Negative widths are allowed and mean "skip these bytes in the input".
+    """
 
     spec = []
 
@@ -39,7 +54,37 @@ def read_file_format(fpath):
 
 def parse_lines(lines, spec, strip=True, type_errors='raise', encoding='utf-8',
                 src_file=None, skip_blank_lines=False):
-    """Parse iterable of lines of fixed width data."""
+    """Parse an iterable of binary lines using a fixed-width specification.
+
+    Args:
+        lines (iterable[bytes]): Input records, typically from a binary file
+            handle or :class:`io.BytesIO`.
+        spec (sequence[tuple]): Sequence of ``(width, datatype, name)`` values
+            or :class:`FieldInfo` objects.
+        strip (bool): Strip decoded field values before conversion.
+        type_errors (str): ``'raise'`` to propagate conversion failures or
+            ``'ignore'`` to log a warning and replace the field with ``None``.
+        encoding (str): Character encoding used to decode field bytes.
+        src_file (str | None): Optional file name used in log messages.
+        skip_blank_lines (bool): Skip lines that are empty after removing
+            trailing newline characters. Lines that contain only spaces are not
+            skipped.
+
+    Yields:
+        collections.OrderedDict: One parsed record per input line, excluding
+        fields with negative widths.
+
+    Raises:
+        ValueError: If a converter fails and ``type_errors='raise'``.
+        struct.error: If an input line is shorter than the declared layout.
+
+    Example:
+        >>> from io import BytesIO
+        >>> layout = [(2, 'int', 'row_id'), (5, 'str', 'name')]
+        >>> rows = parse_lines(BytesIO(b'01Bob  \\n'), layout)
+        >>> next(rows)['name']
+        'Bob'
+    """
 
     fieldstruct = struct.Struct(
         ' '.join('{}{}'.format(abs(w), 'x' if w < 0 else 's') for w, *_ in spec)
@@ -88,7 +133,33 @@ def parse_lines(lines, spec, strip=True, type_errors='raise', encoding='utf-8',
 
 def parse_file(fpath, spec, strip=True, type_errors='raise', encoding='ascii',
                skip_blank_lines=False):
-    """Read data from fixed width file."""
+    """Open and parse a fixed-width data file.
+
+    Args:
+        fpath (str): Path to a file containing fixed-width records.
+        spec (sequence[tuple]): Sequence of ``(width, datatype, name)`` values
+            or :class:`FieldInfo` objects.
+        strip (bool): Strip decoded field values before conversion.
+        type_errors (str): ``'raise'`` to propagate conversion failures or
+            ``'ignore'`` to replace invalid fields with ``None``.
+        encoding (str): Character encoding used to decode each field. This
+            function defaults to ``'ascii'`` for backward compatibility.
+        skip_blank_lines (bool): Skip lines that are empty after removing
+            trailing newline characters.
+
+    Yields:
+        collections.OrderedDict: Parsed rows from ``fpath``.
+
+    Raises:
+        ValueError: If a converter fails and ``type_errors='raise'``.
+        struct.error: If a record is shorter than the declared layout.
+
+    Example:
+        >>> title, spec = read_file_format('example/data.layout')
+        >>> rows = parse_file('example/data1.txt', spec=spec)
+        >>> next(rows)['employee_id']
+        100001
+    """
 
     with open(fpath, 'rb') as fh:
         yield from parse_lines(
@@ -97,7 +168,33 @@ def parse_file(fpath, spec, strip=True, type_errors='raise', encoding='ascii',
 
 
 class DictReader:
+    """Iterate over fixed-width records in a ``csv.DictReader``-like style.
+
+    ``DictReader`` wraps :func:`parse_lines` for a binary file object and keeps
+    a ``line_num`` counter like :mod:`csv`. The yielded records omit skipped
+    fields with negative widths because parsing is delegated to
+    :func:`parse_lines`.
+
+    Attributes:
+        fieldnames (tuple[str, ...]): Field names copied from the supplied
+            layout specification.
+        line_num (int): Number of records read so far.
+    """
+
     def __init__(self, f, fieldinfo, skip_blank_lines=False):
+        """Create a reader for a fixed-width binary stream.
+
+        Args:
+            f: File-like object opened in binary read mode.
+            fieldinfo: Either a path to a layout file or a sequence of layout
+                tuples in ``(width, datatype, name)`` form.
+            skip_blank_lines (bool): Skip lines that are empty after removing
+                trailing newline characters.
+
+        Raises:
+            ValueError: If ``fieldinfo`` is a bad path or if ``f`` is not open
+                for binary reading.
+        """
 
         try:
             if os.path.isfile(fieldinfo):

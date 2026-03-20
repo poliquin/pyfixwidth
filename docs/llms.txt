@@ -1,0 +1,24 @@
+# pyfixwidth
+
+> Lightweight documentation index for LLMs, MCP tools, and coding agents.
+
+Canonical documentation sources:
+
+- Repository: https://github.com/poliquin/pyfixwidth
+- Published docs home: https://poliquin.github.io/pyfixwidth/
+- README: https://raw.githubusercontent.com/poliquin/pyfixwidth/master/README.md
+- Docs home source: https://raw.githubusercontent.com/poliquin/pyfixwidth/master/docs/index.md
+- Layout format source: https://raw.githubusercontent.com/poliquin/pyfixwidth/master/docs/layout-format.md
+- Python API source: https://raw.githubusercontent.com/poliquin/pyfixwidth/master/docs/python-api.md
+- CLI source: https://raw.githubusercontent.com/poliquin/pyfixwidth/master/docs/cli.md
+- Cookbook source: https://raw.githubusercontent.com/poliquin/pyfixwidth/master/docs/cookbook.md
+- Agent notes: https://raw.githubusercontent.com/poliquin/pyfixwidth/master/AGENTS.md
+
+Important constraints:
+
+- `DictReader` requires a binary file object opened for reading.
+- `parse_file()` defaults to `encoding='ascii'`.
+- `parse_lines()` defaults to `encoding='utf-8'`.
+- Blank field content becomes `None` before type conversion.
+- Negative widths skip input bytes and do not appear in parsed rows.
+- Use `type_errors='ignore'` to continue parsing and replace invalid values with `None`.

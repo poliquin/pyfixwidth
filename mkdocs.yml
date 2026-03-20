@@ -1,0 +1,14 @@
+site_name: pyfixwidth
+site_description: Lightweight documentation for reading fixed-width files with Python.
+site_url: https://poliquin.github.io/pyfixwidth/
+repo_url: https://github.com/poliquin/pyfixwidth
+repo_name: poliquin/pyfixwidth
+theme:
+  name: readthedocs
+strict: true
+nav:
+  - Home: index.md
+  - Layout Format: layout-format.md
+  - Python API: python-api.md
+  - CLI: cli.md
+  - Cookbook: cookbook.md

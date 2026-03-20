@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyfixwidth"
-version = "0.2.2"
+version = "0.3.2"
 description = "Read fixed width data files"
 readme = "README.md"
 license = "MIT"
@@ -32,9 +32,11 @@ dependencies = []
 [project.urls]
 Homepage = "https://github.com/poliquin/pyfixwidth"
 Repository = "https://github.com/poliquin/pyfixwidth"
+Documentation = "https://poliquin.github.io/pyfixwidth/"
 
 [project.optional-dependencies]
 dev = ["build", "pytest", "twine"]
+docs = ["mkdocs>=1.6"]
 
 [project.scripts]
 pyfixwidth = "fixwidth.__main__:cli"

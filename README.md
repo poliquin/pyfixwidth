@@ -1,138 +1,178 @@
-Read Fixed Width Files
-======================
+# pyfixwidth
 
-Python 3 module for reading fixed width data files and converting the field
-contents to appropriate Python types.
+`pyfixwidth` reads fixed-width text files and converts each record into Python
+values. It can be used as a command-line tool that writes delimited output or
+as a small parsing library inside your own code.
 
+The package has no runtime dependencies and is designed to stay lightweight.
 
-## Running the program
+## Install
 
-The module can be run from the command line as follows:
-
-    python -m fixwidth data.layout data1.txt data2.txt
-
-where `data1.txt` and `data2.txt` contain records and `data.layout` contains
-a description of the records and how to parse each field. By default, the
-records will be written as tab-separated values to stdout.
-
-
-## Specifying fixed width layout
-
-The `data.layout` file should be tab-delimited and might look like this:
-
-    employees
-    # records on workers and their salaries
-     6	int	employee_id
-    15	str	job_title
-     8	float	salary
-    # negative values denote fields to skip when reading data
-    -3	str	blank
-    10	date	hire_date
-
-The file starts with a title. This could be used to map records to a database
-table or file name when using the module from other code. Comments begin with
-`#` and must be on their own line. Each line describes a data field. The
-first value is the field width, the second value describes how to convert the
-data to a Python object, and the third value is a field name.
-
-Note that negative field widths are used to specify text that should be
-ignored/discarded when reading the data.
-
-### Data types
-
-The possible values for the second value of the layout (the data type) are:
-
-* `str`: textual data
-* `int`: integers
-* `float`: floating point numbers
-* `bool`: boolean (`True`/`False`) values
-* `yesno`: parses values like `Y`, `N`, `Yes`, `No` to a `True`/`False` value
-* `date`: dates like `1995-08-23`, `19950823`, or `23aug1995`
-* `datetime`: dates with time like `1995-08-23 14:30:00.000`
-* `julian`: Julian dates in `YYYYDDD` format where `DDD` is day-of-year
-
-#### Date types
-
-Currently, the `date` and `datetime` types will guess the format of the
-date using regular expressions. This could be improved by adding more robust
-methods or adding some way to specify a date format in the layout file.
-
-#### Adding more data types
-
-Types are defined in `converters.py` and it is trivial to add more types.
-To add a type, apply the `fixwidth.converters.register_type` decorator to
-a function that takes string input and returns a single object:
-
-```python
-
-from fixwidth.converters import register_type
-
-@register_type('foo')
-def convert_foo(value):
-    """Convert any input to the string 'foo!'"""
-    return 'foo!'
+```bash
+pip install pyfixwidth
 ```
 
-The type `foo` can then be used in layouts like the above column types.
+## Quickstart
 
+The repository includes a small example layout and sample data files:
 
-## Usage as a module
+```bash
+python -m fixwidth example/data.layout example/data1.txt example/data2.txt
+```
 
-There is a `fixwidth.DictReader` class that resembles `csv.DictReader` in
-usage, but requires files be opened in binary mode:
+This writes tab-separated output to standard output:
+
+```text
+employee_id	job_title	salary	hire_date
+100001	CEO	15000.0	1995-08-23
+100002	Programmer	8500.0	2002-11-10
+100003	Data Scientist	10000.0	2005-07-01
+100004	Sales Rep	5000.0	1999-06-01
+100005	Customer Servic	4800.0	2001-12-17
+```
+
+If you install the package, the same command is also available as:
+
+```bash
+pyfixwidth example/data.layout example/data1.txt example/data2.txt
+```
+
+## Layout File Format
+
+A layout file is tab-delimited and describes how each source field should be
+read. The first line is a title, then each later line contains:
+
+1. field width
+2. converter name
+3. field name
+
+Example:
+
+```text
+employees
+# records on workers and their salaries
+  6	int	employee_id
+ 15	str	job_title
+  8	float	salary
+# negative values denote fields to skip when reading data
+ -3	str	blank
+ 10	date	hire_date
+```
+
+Rules:
+
+* Comments begin with `#` and must occupy their own line.
+* Negative widths skip bytes in the input and do not appear in parsed rows.
+* Blank field content becomes `None` before type conversion.
+* A layout can be loaded from disk with `read_file_format()` or supplied
+  directly as a sequence of `(width, datatype, name)` tuples.
+
+### Supported Converters
+
+| Type | Meaning | Accepted values |
+| --- | --- | --- |
+| `str` | text | any decoded string |
+| `int` | integer | values accepted by `int()` |
+| `float` | floating point number | values accepted by `float()` |
+| `bool` | boolean | Python truthiness via `bool()` |
+| `yesno` | yes/no boolean | `Y`, `N`, `Yes`, `No` and lowercase variants |
+| `date` | date | `1995-08-23`, `19950823`, `23aug1995`, `1995-8-23`, `122599` |
+| `datetime` | date with time | `1995-08-23 14:30:00.000` and similar ISO-like values |
+| `julian` | Julian date | `YYYYDDD`, with optional separators removed before parsing |
+| `time` | time | `14:30:00`, `14.30.00`, `143000`, `09:00`, `0900` |
+
+`date` and `datetime` formats are inferred with regular expressions, so if you
+have unusual source formats you may want to register a custom converter.
+
+## Python API
+
+For most code, these are the main entry points:
+
+* `read_file_format(path)` loads a layout file and returns `(title, spec)`.
+* `parse_file(path, spec=...)` yields `OrderedDict` rows from a file on disk.
+* `parse_lines(lines, spec=...)` parses an iterable of binary lines.
+* `DictReader(fileobj, fieldinfo=...)` provides a `csv.DictReader`-like
+  iterator for binary file objects.
+* `register_type(name)` lets you add custom converters.
+
+### Parse a Layout and a Data File
+
+```python
+from fixwidth import read_file_format, parse_file
+
+title, layout = read_file_format('example/data.layout')
+
+print(title)
+
+rows = parse_file('example/data1.txt', spec=layout, type_errors='ignore')
+for row in rows:
+    print('Salary for {} is {}'.format(row['employee_id'], row['salary']))
+```
+
+### Use `DictReader`
+
+`DictReader` expects a binary file object:
 
 ```python
 import fixwidth
 
 with open('example/data1.txt', 'rb') as fh:
-    rdr = fixwidth.DictReader(
+    reader = fixwidth.DictReader(
         fh,
         fieldinfo='example/data.layout',
-        skip_blank_lines=True
+        skip_blank_lines=True,
     )
-    next(rdr)
+    first_row = next(reader)
+    print(first_row['job_title'])
 ```
 
-The `fieldinfo` parameter can be a path to a layout file (described above)
-or a sequence of tuples describing the columns:
+You can also pass the layout directly:
 
 ```python
-
 layout = [
     (6, 'int', 'employee_id'),
     (15, 'str', 'job_title'),
     (8, 'float', 'salary'),
     (-3, 'str', 'blank'),
-    (10, 'date', 'hire_date')
+    (10, 'date', 'hire_date'),
 ]
 
 with open('example/data1.txt', 'rb') as fh:
-    rdr = fixwidth.DictReader(fh, layout)
+    reader = fixwidth.DictReader(fh, layout)
+    print(next(reader))
 ```
 
-Alternatively, you can use the functions `read_file_format` and `parse_file`:
+## Custom Converters
+
+Converters live in `fixwidth.converters`. To register a new one, decorate a
+function that accepts a decoded string and returns the converted value.
 
 ```python
-from fixwidth import read_file_format, parse_file
+from fixwidth.converters import register_type
 
-# read a layout file describing how records are formatted
-title, layout = read_file_format('example/data.layout')
-
-# title is 'employees' for the above layout example
-# layout is a list of namedtuple objects with (width, datatype, name)
-
-# parse a data file
-rows = parse_file('example/data1.txt', spec=layout, type_errors='ignore')
-
-# type_errors determines what should happen when field content does not
-# match the given datatype (e.g. an int column containing 'abc'). Use
-# 'ignore' to replace fields with None and 'raise' to raise ValueError.
-
-for r in rows:
-    print('Salary for {} is {}'.format(r['employee_id'], r['salary'])
-
-# rows is a generator that yields OrderedDict objects.
+@register_type('uppercase')
+def convert_uppercase(value):
+    return value.strip().upper()
 ```
 
-<!-- vim: tabstop=10
--->
+After registration, the new type name can be used in layouts just like the
+built-in types.
+
+## Troubleshooting
+
+* Open files in binary mode when using `DictReader`.
+* `parse_file()` defaults to `encoding='ascii'`.
+* `parse_lines()` defaults to `encoding='utf-8'`.
+* Use `type_errors='ignore'` to replace invalid values with `None` and keep
+  parsing.
+* `skip_blank_lines=True` ignores lines that are empty after removing trailing
+  newlines. Lines that contain only spaces still produce a row of `None` values.
+
+## More Documentation
+
+Additional documentation lives in [`docs/index.md`](docs/index.md):
+
+* [`docs/layout-format.md`](docs/layout-format.md)
+* [`docs/python-api.md`](docs/python-api.md)
+* [`docs/cli.md`](docs/cli.md)
+* [`docs/cookbook.md`](docs/cookbook.md)

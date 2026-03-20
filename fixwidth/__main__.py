@@ -1,3 +1,4 @@
+"""Command-line interface for :mod:`fixwidth`."""
 
 import csv
 import logging
@@ -11,12 +12,18 @@ def main(schema, files, output=None, delimiter='\t', ignore_type_errors=False,
     """Process fixed width files and write to standard output.
 
     Args:
-        schema (str): path to file describing fixed width file layout.
-        files (list, str): path(s) to fix width files containing data.
-        output (file): file for writing processed data (default is sys.stdout).
-        delimiter (str): field delimiter for output.
-        ignore_type_errors (bool): replace invalid field data with None.
-        skip_blank_lines (bool): whether to ignore blank lines in input data.
+        schema (str): Path to the tab-delimited layout file.
+        files (list | str): One or more fixed-width data files to parse.
+        output (file | None): Text file object to write to. Defaults to
+            :data:`sys.stdout`.
+        delimiter (str): Field delimiter for output rows.
+        ignore_type_errors (bool): Replace invalid field data with ``None``
+            instead of raising a :class:`ValueError`.
+        skip_blank_lines (bool): Ignore lines that are empty after removing
+            trailing newline characters.
+
+    Returns:
+        list[fixwidth.fixwidth.FieldInfo]: The loaded layout specification.
     """
 
     if output is None:
@@ -56,6 +63,8 @@ def main(schema, files, output=None, delimiter='\t', ignore_type_errors=False,
 
 
 def cli(argv=None):
+    """Parse command-line arguments and run the CLI entry point."""
+
     import atexit
     import argparse
 
